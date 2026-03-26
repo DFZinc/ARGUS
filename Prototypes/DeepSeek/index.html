@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARGUS - Narrative Intelligence</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%230a0a0f%22/><circle cx=%2216%22 cy=%2216%22 r=%228%22 fill=%22%236366f1%22/><path d=%22M16 8 L16 12 M16 20 L16 24 M8 16 L12 16 M20 16 L24 16%22 stroke=%22%238b5cf6%22 stroke-width=%221.5%22/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #0a0a0f;
+    --bg-card:  rgba(0,0,0,0.35);
+    --border:   rgba(99,102,241,0.25);
+    --border-glow: rgba(99,102,241,0.5);
+    --text:     #e8e8f0;
+    --text-dim: #a0a0c0;
+    --text-muted: #6b6b8a;
+    --cyan:     #39d0d8;
+    --cyan-dark: #2a9aa0;
+    --purple:   #8b5cf6;
+    --purple-dark: #6d28d9;
+    --green:    #10b981;
+    --green-dark: #059669;
+    --red:      #ef4444;
+    --red-dark: #dc2626;
+    --amber:    #f59e0b;
+    --gold:     #ffd700;
+    --radius:   6px;
+    --mono:     'Space Mono', monospace;
+    --sans:     'DM Sans', sans-serif;
+    --display:  'Cinzel', serif;
+    --glow:     0 0 10px rgba(99,102,241,0.3);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13px;
+    min-height: 100vh;
+    background-image: radial-gradient(circle at 20% 30%, rgba(99,102,241,0.08) 0%, transparent 50%),
+                      radial-gradient(circle at 80% 70%, rgba(139,92,246,0.08) 0%, transparent 50%);
+    background-attachment: fixed;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
+  ::-webkit-scrollbar-thumb { background: var(--purple); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--cyan); }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 28px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(12px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  
+  .logo-icon {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--purple), var(--cyan));
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 20px;
+    color: #000;
+  }
+  
+  .logo-text {
+    font-family: var(--display);
+    font-size: 20px;
+    letter-spacing: 0.08em;
+  }
+  
+  .logo-text span { color: var(--cyan); font-weight: 700; }
+  .logo-sub {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 2px;
+    letter-spacing: 0.05em;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .price-ticker {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--amber);
+    background: rgba(245,158,11,0.1);
+    padding: 6px 12px;
+    border-radius: var(--radius);
+    border: 1px solid rgba(245,158,11,0.2);
+  }
+
+  .status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--red);
+  }
+  
+  .status-dot.running {
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: pulse 1.5s infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  
+  .status-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+  .status-label.running { color: var(--green); }
+  .status-label.stopped { color: var(--red); }
+
+  .btn {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 6px 14px;
+    border-radius: var(--radius);
+    border: 1px solid;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: transparent;
+    text-transform: uppercase;
+  }
+  
+  .btn-start { border-color: var(--green); color: var(--green); }
+  .btn-start:hover { background: var(--green); color: #000; box-shadow: 0 0 12px var(--green); }
+  .btn-stop { border-color: var(--red); color: var(--red); }
+  .btn-stop:hover { background: var(--red); color: #000; }
+  .btn-refresh { border-color: var(--purple); color: var(--purple); }
+  .btn-refresh:hover { background: var(--purple); color: #000; }
+
+  /* Main Layout */
+  .page {
+    padding: 20px 28px;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+
+  /* Stats Grid */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+    backdrop-filter: blur(8px);
+    transition: all 0.2s;
+  }
+  
+  .stat-card:hover {
+    border-color: var(--border-glow);
+    transform: translateY(-2px);
+  }
+  
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+  }
+  
+  .stat-card.cyber::before { background: linear-gradient(90deg, var(--cyan), var(--purple)); }
+  .stat-card.green::before { background: var(--green); }
+  .stat-card.amber::before { background: var(--amber); }
+  .stat-card.purple::before { background: var(--purple); }
+  .stat-card.blue::before { background: var(--cyan); }
+
+  .stat-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+  
+  .stat-value {
+    font-family: var(--mono);
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.2;
+  }
+  
+  .stat-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 6px;
+  }
+
+  /* Tab Layout */
+  .dashboard-layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 16px;
+    min-height: 600px;
+  }
+
+  /* Sidebar Tabs */
+  .tab-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    background: rgba(0,0,0,0.25);
+    border: 1px solid rgba(99,102,241,0.15);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    width: 100%;
+  }
+  
+  .tab-btn:hover {
+    background: rgba(99,102,241,0.1);
+    border-color: var(--purple);
+    color: var(--text);
+  }
+  
+  .tab-btn.active {
+    background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.15));
+    border-color: var(--purple);
+    color: var(--cyan);
+    box-shadow: 0 0 12px rgba(99,102,241,0.2);
+  }
+  
+  .tab-icon { font-size: 16px; width: 24px; }
+  .tab-badge {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 10px;
+    background: rgba(99,102,241,0.2);
+    padding: 2px 6px;
+    border-radius: 10px;
+    color: var(--cyan);
+  }
+
+  /* Content Panel */
+  .content-panel {
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    backdrop-filter: blur(8px);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(0,0,0,0.3);
+  }
+  
+  .panel-title {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--cyan);
+  }
+  
+  .panel-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    background: rgba(255,255,255,0.05);
+    padding: 4px 10px;
+    border-radius: 12px;
+  }
+
+  .panel-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+    max-height: 600px;
+  }
+
+  /* Tables */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+  
+  .data-table th {
+    text-align: left;
+    padding: 12px 12px;
+    color: var(--text-muted);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+  
+  .data-table td {
+    padding: 12px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    color: var(--text-dim);
+  }
+  
+  .data-table tr:hover td {
+    background: rgba(99,102,241,0.05);
+  }
+
+  .score-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 11px;
+  }
+  
+  .score-high { background: rgba(16,185,129,0.2); color: var(--green); }
+  .score-medium { background: rgba(245,158,11,0.2); color: var(--amber); }
+  .score-low { background: rgba(239,68,68,0.2); color: var(--red); }
+
+  .narrative-tag {
+    display: inline-block;
+    background: rgba(99,102,241,0.2);
+    color: var(--cyan);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-family: var(--mono);
+    margin: 2px;
+  }
+
+  /* Settings Sections */
+  .settings-section {
+    margin-bottom: 28px;
+  }
+  
+  .settings-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  
+  .api-key-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  
+  .api-input {
+    flex: 1;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text);
+    outline: none;
+  }
+  
+  .api-input:focus { border-color: var(--cyan); }
+
+  .slider-field {
+    margin-bottom: 16px;
+  }
+  
+  .slider-field label {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+  
+  input[type=range] {
+    width: 100%;
+    accent-color: var(--cyan);
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .config-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+  
+  .config-field label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  
+  .config-field input {
+    width: 100%;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  /* Log Terminal */
+  .log-terminal {
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.8;
+    background: rgba(0,0,0,0.3);
+    border-radius: var(--radius);
+    padding: 12px;
+    height: 500px;
+    overflow-y: auto;
+  }
+  
+  .log-line {
+    padding: 3px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.02);
+    color: var(--text-dim);
+  }
+  
+  .log-info { color: var(--cyan); }
+  .log-success { color: var(--green); }
+  .log-warning { color: var(--amber); }
+  .log-error { color: var(--red); }
+
+  /* Empty State */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+  }
+  
+  .empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.3;
+  }
+
+  .refresh-note {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    padding: 10px 16px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo">
+    <div class="logo-icon">👁️</div>
+    <div>
+      <div class="logo-text"><span>ARGUS</span> / NARRATIVE INTELLIGENCE</div>
+      <div class="logo-sub">real-time narrative detection · launch analysis · alpha generation</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="price-ticker" id="ethPrice">ETH $—</span>
+    <div class="status-indicator">
+      <div class="status-dot" id="statusDot"></div>
+      <span class="status-label" id="statusLabel">INACTIVE</span>
+    </div>
+    <button class="btn btn-refresh" onclick="refreshAll()">↻ REFRESH</button>
+    <button class="btn btn-start" id="startBtn" onclick="startAgent()">▶ START</button>
+    <button class="btn btn-stop" id="stopBtn" onclick="stopAgent()" style="display:none">■ STOP</button>
+  </div>
+</header>
+
+<div class="page">
+  <!-- Stats Row -->
+  <div class="stats-grid">
+    <div class="stat-card cyber">
+      <div class="stat-label">Active Narratives</div>
+      <div class="stat-value" id="statNarratives">—</div>
+      <div class="stat-sub">trending topics</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-label">High-Potential Launches</div>
+      <div class="stat-value" id="statLaunches">—</div>
+      <div class="stat-sub">score ≥ 60</div>
+    </div>
+    <div class="stat-card amber">
+      <div class="stat-label">Avg Narrative Score</div>
+      <div class="stat-value" id="statAvgScore">—</div>
+      <div class="stat-sub">velocity weighted</div>
+    </div>
+    <div class="stat-card purple">
+      <div class="stat-label">Top Narrative</div>
+      <div class="stat-value" id="statTopNarrative">—</div>
+      <div class="stat-sub" id="statTopScore">velocity: —</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-label">Cycle Count</div>
+      <div class="stat-value" id="statCycles">—</div>
+      <div class="stat-sub">since startup</div>
+    </div>
+    <div class="stat-card cyber">
+      <div class="stat-label">System Status</div>
+      <div class="stat-value" id="statHealth">—</div>
+      <div class="stat-sub" id="statLastUpdate">last cycle: —</div>
+    </div>
+  </div>
+
+  <!-- Main Dashboard Layout -->
+  <div class="dashboard-layout">
+    <!-- Sidebar Tabs -->
+    <div class="tab-sidebar">
+      <button class="tab-btn active" onclick="showTab('dashboard')" id="tab-dashboard">
+        <span class="tab-icon">📊</span> Dashboard
+      </button>
+      <button class="tab-btn" onclick="showTab('launches')" id="tab-launches">
+        <span class="tab-icon">🚀</span> Launches
+        <span class="tab-badge" id="launchBadge">0</span>
+      </button>
+      <button class="tab-btn" onclick="showTab('narratives')" id="tab-narratives">
+        <span class="tab-icon">📈</span> Narratives
+        <span class="tab-badge" id="narrativeBadge">0</span>
+      </button>
+      <button class="tab-btn" onclick="showTab('analysis')" id="tab-analysis">
+        <span class="tab-icon">🧠</span> LLM Analysis
+      </button>
+      <button class="tab-btn" onclick="showTab('settings')" id="tab-settings">
+        <span class="tab-icon">⚙️</span> Settings
+      </button>
+      <button class="tab-btn" onclick="showTab('log')" id="tab-log">
+        <span class="tab-icon">📋</span> Agent Log
+        <span class="tab-badge" id="logBadge">0</span>
+      </button>
+    </div>
+
+    <!-- Content Panel -->
+    <div class="content-panel">
+      <!-- Dashboard Tab -->
+      <div class="tab-pane" id="pane-dashboard" style="display:flex;flex-direction:column;flex:1">
+        <div class="panel-header">
+          <span class="panel-title">◈ REAL-TIME NARRATIVE INTELLIGENCE</span>
+          <span class="panel-badge" id="dashboardTimestamp">live</span>
+        </div>
+        <div class="panel-body">
+          <div style="margin-bottom:24px">
+            <h3 style="font-family:var(--mono);font-size:12px;color:var(--cyan);margin-bottom:12px">🔥 TOP NARRATIVES BY VELOCITY</h3>
+            <div id="topNarrativesList" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+          </div>
+          <div>
+            <h3 style="font-family:var(--mono);font-size:12px;color:var(--cyan);margin-bottom:12px">⚡ RECENT HIGH-POTENTIAL LAUNCHES</h3>
+            <div id="recentLaunchesList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Launches Tab -->
+      <div class="tab-pane" id="pane-launches" style="display:none;flex-direction:column;flex:1">
+        <div class="panel-header">
+          <span class="panel-title">◈ HIGH-POTENTIAL LAUNCHES</span>
+          <span class="panel-badge" id="launchCountBadge">0 found</span>
+        </div>
+        <div class="panel-body" id="launchesList"></div>
+      </div>
+
+      <!-- Narratives Tab -->
+      <div class="tab-pane" id="pane-narratives" style="display:none;flex-direction:column;flex:1">
+        <div class="panel-header">
+          <span class="panel-title">◈ TRENDING NARRATIVES</span>
+          <span class="panel-badge" id="narrativeCountBadge">0 active</span>
+        </div>
+        <div class="panel-body" id="narrativesList"></div>
+      </div>
+
+      <!-- LLM Analysis Tab -->
+      <div class="tab-pane" id="pane-analysis" style="display:none;flex-direction:column;flex:1">
+        <div class="panel-header">
+          <span class="panel-title">◈ AI NARRATIVE ANALYSIS</span>
+          <span class="panel-badge">deepseek-r1:8b</span>
+        </div>
+        <div class="panel-body" id="analysisContent">
+          <div class="empty-state">
+            <div class="empty-icon">🧠</div>
+            <div>Click "Generate Analysis" to get AI insights</div>
+            <button class="btn btn-refresh" onclick="generateAnalysis()" style="margin-top:16px">GENERATE ANALYSIS</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Tab -->
+      <div class="tab-pane" id="pane-settings" style="display:none;flex-direction:column;flex:1">
+        <div class="panel-header">
+          <span class="panel-title">◈ SYSTEM CONFIGURATION</span>
+        </div>
+        <div class="panel-body">
+          <div class="settings-section">
+            <div class="settings-title">API KEYS</div>
+            <div class="api-key-row">
+              <input class="api-input" type="password" id="lunarcrushKey" placeholder="LunarCrush API Key"/>
+              <button class="btn btn-refresh" onclick="saveApiKey('lunarcrush')">SAVE</button>
+            </div>
+            <div class="api-key-row">
+              <input class="api-input" type="password" id="xBearerKey" placeholder="X Bearer Token"/>
+              <button class="btn btn-refresh" onclick="saveApiKey('x')">SAVE</button>
+            </div>
+          </div>
+          
+          <div class="settings-section">
+            <div class="settings-title">AGENT CONFIGURATION</div>
+            <div class="config-grid">
+              <div class="config-field">
+                <label>Poll Interval (seconds)</label>
+                <input type="number" id="pollInterval" placeholder="300"/>
+              </div>
+              <div class="config-field">
+                <label>Min Score Threshold</label>
+                <input type="number" id="scoreThreshold" placeholder="60"/>
+              </div>
+            </div>
+            <button class="btn btn-refresh" onclick="saveAgentConfig()" style="margin-top:16px">SAVE CONFIG</button>
+          </div>
+          
+          <div class="settings-section">
+            <div class="settings-title">THEME</div>
+            <div class="slider-field">
+              <label>Panel Opacity <span id="opacityVal">45%</span></label>
+              <input type="range" id="opacitySlider" min="0" max="90" step="5" value="45" oninput="applyTheme()"/>
+            </div>
+            <div class="slider-field">
+              <label>Blur Effect <span id="blurVal">8px</span></label>
+              <input type="range" id="blurSlider" min="0" max="20" step="1" value="8" oninput="applyTheme()"/>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Log Tab -->
+      <div class="tab-pane" id="pane-log" style="display:none;flex-direction:column;flex:1">
+        <div class="panel-header">
+          <span class="panel-title">◈ AGENT LOG</span>
+          <span class="panel-badge" id="logLineCount">0 lines</span>
+        </div>
+        <div class="log-terminal" id="logTerminal"></div>
+        <div class="refresh-note">Real-time agent activity — updates every cycle</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '';
+let ws = null;
+let _ethPrice = 2500;
+let _currentData = { findings: [], narratives: [] };
+
+// Tab switching
+function showTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p => p.style.display = 'none');
+  document.getElementById(`tab-${name}`).classList.add('active');
+  document.getElementById(`pane-${name}`).style.display = 'flex';
+}
+
+// Format helpers
+function fmtNumber(n) {
+  if (!n) return '0';
+  if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
+  if (n >= 1000) return (n/1000).toFixed(1) + 'K';
+  return n.toString();
+}
+
+function fmtEthPrice(price) {
+  if (!price || price === 0) return '$—';
+  if (price < 0.000001) return '$' + price.toExponential(4);
+  if (price < 0.01) return '$' + price.toFixed(8);
+  if (price < 1) return '$' + price.toFixed(6);
+  return '$' + price.toFixed(4);
+}
+
+// Fetch and update data
+async function fetchData() {
+  try {
+    const [findingsRes, narrativesRes, statsRes, healthRes] = await Promise.all([
+      fetch(`${API}/api/findings?limit=50`),
+      fetch(`${API}/api/narratives?limit=20`),
+      fetch(`${API}/api/stats`),
+      fetch(`${API}/api/health`)
+    ]);
+    
+    const findings = await findingsRes.json();
+    const narratives = await narrativesRes.json();
+    const stats = await statsRes.json();
+    const health = await healthRes.json();
+    
+    _currentData = { findings: findings.findings || [], narratives: narratives.narratives || [] };
+    
+    updateStats(stats, health);
+    updateDashboard();
+    updateLaunchesTable();
+    updateNarrativesTable();
+    updateBadges();
+    
+    document.getElementById('dashboardTimestamp').textContent = new Date().toLocaleTimeString();
+  } catch (error) {
+    console.error('Fetch error:', error);
+  }
+}
+
+function updateStats(stats, health) {
+  const narratives = _currentData.narratives;
+  const topNarrative = narratives.length > 0 ? narratives[0] : null;
+  
+  document.getElementById('statNarratives').textContent = stats.total_narratives || 0;
+  document.getElementById('statLaunches').textContent = stats.total_findings || 0;
+  document.getElementById('statAvgScore').textContent = stats.avg_score_24h || 0;
+  document.getElementById('statTopNarrative').textContent = topNarrative ? topNarrative.keyword.slice(0, 15) : '—';
+  document.getElementById('statTopScore').textContent = topNarrative ? `velocity: ${topNarrative.velocity_score}` : '—';
+  document.getElementById('statCycles').textContent = health.cycle_count || 0;
+  document.getElementById('statHealth').textContent = health.status === 'healthy' ? 'ACTIVE' : 'STANDBY';
+  document.getElementById('statLastUpdate').textContent = `last: ${new Date().toLocaleTimeString()}`;
+  
+  const running = health.status === 'healthy';
+  document.getElementById('statusDot').className = 'status-dot' + (running ? ' running' : '');
+  document.getElementById('statusLabel').textContent = running ? 'ACTIVE' : 'INACTIVE';
+  document.getElementById('statusLabel').className = 'status-label' + (running ? ' running' : ' stopped');
+  document.getElementById('startBtn').style.display = running ? 'none' : '';
+  document.getElementById('stopBtn').style.display = running ? '' : 'none';
+}
+
+function updateDashboard() {
+  const narratives = _currentData.narratives.slice(0, 8);
+  const launches = _currentData.findings.slice(0, 5);
+  
+  // Top narratives pills
+  const pillsHtml = narratives.map(n => `
+    <div style="background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.3);border-radius:20px;padding:8px 16px">
+      <span style="font-family:var(--mono);font-weight:700;color:var(--cyan)">${n.keyword}</span>
+      <span style="color:var(--green);margin-left:8px">${n.velocity_score}</span>
+    </div>
+  `).join('');
+  document.getElementById('topNarrativesList').innerHTML = pillsHtml || '<div class="empty-state">No narratives detected</div>';
+  
+  // Recent launches
+  if (launches.length === 0) {
+    document.getElementById('recentLaunchesList').innerHTML = '<div class="empty-state">No high-potential launches found</div>';
+    return;
+  }
+  
+  const launchesHtml = `
+    <table class="data-table">
+      <thead><tr>
+        <th>Symbol</th><th>Score</th><th>Narratives</th><th>Volume (1h)</th><th>Txns</th>
+      </tr></thead>
+      <tbody>
+        ${launches.map(l => `
+          <tr>
+            <td><strong style="color:var(--cyan)">${l.symbol}</strong></td>
+            <td><span class="score-badge ${l.score >= 80 ? 'score-high' : l.score >= 60 ? 'score-medium' : 'score-low'}">${l.score}</span></td>
+            <td>${(l.found_narratives || []).slice(0,2).map(n => `<span class="narrative-tag">${n}</span>`).join('')}</td>
+            <td>$${fmtNumber(l.volume_usd_1h)}</td>
+            <td>${fmtNumber(l.txns_1h)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+  document.getElementById('recentLaunchesList').innerHTML = launchesHtml;
+}
+
+function updateLaunchesTable() {
+  const launches = _currentData.findings;
+  const container = document.getElementById('launchesList');
+  
+  if (launches.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🚀</div><div>No high-potential launches found in current cycle</div></div>';
+    return;
+  }
+  
+  const html = `
+    <table class="data-table">
+      <thead><tr>
+        <th>Symbol</th><th>Name</th><th>Score</th><th>Narrative Fit</th><th>Matched Narratives</th>
+        <th>Volume (1h)</th><th>Txns (1h)</th><th>Price Change</th>
+      </tr></thead>
+      <tbody>
+        ${launches.map(l => `
+          <tr>
+            <td><strong style="color:var(--cyan)">${l.symbol}</strong></td>
+            <td style="color:var(--text-dim)">${l.name?.slice(0, 25) || '-'}</td>
+            <td><span class="score-badge ${l.score >= 80 ? 'score-high' : l.score >= 60 ? 'score-medium' : 'score-low'}">${l.score}</span></td>
+            <td>${l.narrative_fit || 0}</td>
+            <td>${(l.found_narratives || []).slice(0,3).map(n => `<span class="narrative-tag">${n}</span>`).join('') || '-'}</td>
+            <td>$${fmtNumber(l.volume_usd_1h)}</td>
+            <td>${fmtNumber(l.txns_1h)}</td>
+            <td class="${(l.price_change_pct_1h || 0) >= 0 ? 'log-success' : 'log-error'}">${(l.price_change_pct_1h || 0) >= 0 ? '+' : ''}${(l.price_change_pct_1h || 0).toFixed(1)}%</td>
+           </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+  container.innerHTML = html;
+}
+
+function updateNarrativesTable() {
+  const narratives = _currentData.narratives;
+  const container = document.getElementById('narrativesList');
+  
+  if (narratives.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">📈</div><div>No narratives detected in current cycle</div></div>';
+    return;
+  }
+  
+  const html = `
+    <table class="data-table">
+      <thead>\(th>Keyword</th><th>Velocity</th><th>Mentions</th><th>Engagement</th><th>Source</th><th>First Seen</th></thead>
+      <tbody>
+        ${narratives.map(n => `
+          <tr>
+            <td><strong style="color:var(--cyan)">${n.keyword}</strong></td>
+            <td><span class="score-badge ${n.velocity_score >= 70 ? 'score-high' : n.velocity_score >= 40 ? 'score-medium' : 'score-low'}">${n.velocity_score}</span></td>
+            <td>${fmtNumber(n.mention_count || 0)}</td>
+            <td>${fmtNumber(n.engagement || 0)}</td>
+            <td><span style="color:var(--purple)">${n.source}</span></td>
+            <td style="color:var(--text-muted)">${new Date(n.first_seen).toLocaleTimeString()}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+  container.innerHTML = html;
+}
+
+async function generateAnalysis() {
+  const btn = event.target;
+  const originalText = btn.textContent;
+  btn.textContent = 'ANALYZING...';
+  btn.disabled = true;
+  
+  try {
+    const res = await fetch(`${API}/api/analysis/generate`, { method: 'POST' });
+    const data = await res.json();
+    const container = document.getElementById('analysisContent');
+    
+    if (data.analysis) {
+      container.innerHTML = `
+        <div style="font-family:var(--mono);font-size:13px;line-height:1.8;background:rgba(0,0,0,0.3);padding:20px;border-radius:var(--radius)">
+          ${data.analysis.replace(/\n/g, '<br>')}
+        </div>
+      `;
+    } else {
+      container.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><div>${data.error || 'Analysis failed'}</div></div>`;
+    }
+  } catch (error) {
+    document.getElementById('analysisContent').innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div><div>Error: ${error.message}</div></div>`;
+  } finally {
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
+}
+
+function updateBadges() {
+  document.getElementById('launchBadge').textContent = _currentData.findings.length;
+  document.getElementById('launchCountBadge').textContent = `${_currentData.findings.length} found`;
+  document.getElementById('narrativeBadge').textContent = _currentData.narratives.length;
+  document.getElementById('narrativeCountBadge').textContent = `${_currentData.narratives.length} active`;
+}
+
+function applyTheme() {
+  const opacity = document.getElementById('opacitySlider').value;
+  const blur = document.getElementById('blurSlider').value;
+  document.getElementById('opacityVal').textContent = opacity + '%';
+  document.getElementById('blurVal').textContent = blur + 'px';
+  
+  const panels = document.querySelectorAll('.content-panel, .stat-card, .tab-btn');
+  panels.forEach(panel => {
+    panel.style.backdropFilter = `blur(${blur}px)`;
+  });
+}
+
+async function saveApiKey(type) {
+  const key = type === 'lunarcrush' 
+    ? document.getElementById('lunarcrushKey').value 
+    : document.getElementById('xBearerKey').value;
+  
+  await fetch(`${API}/api/config/apikey`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type, key })
+  });
+  
+  const btn = event.target;
+  const orig = btn.textContent;
+  btn.textContent = '✓ SAVED';
+  setTimeout(() => btn.textContent = orig, 2000);
+}
+
+async function saveAgentConfig() {
+  const config = {
+    poll_interval: parseInt(document.getElementById('pollInterval').value),
+    score_threshold: parseInt(document.getElementById('scoreThreshold').value)
+  };
+  
+  await fetch(`${API}/api/config/agent`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(config)
+  });
+  
+  const btn = event.target;
+  const orig = btn.textContent;
+  btn.textContent = '✓ SAVED';
+  setTimeout(() => btn.textContent = orig, 2000);
+}
+
+async function startAgent() {
+  await fetch(`${API}/api/agent/start`, { method: 'POST' });
+  setTimeout(fetchData, 1000);
+}
+
+async function stopAgent() {
+  await fetch(`${API}/api/agent/stop`, { method: 'POST' });
+  setTimeout(fetchData, 1000);
+}
+
+async function refreshAll() {
+  await fetchData();
+}
+
+// WebSocket for logs
+function connectWS() {
+  if (ws) ws.close();
+  ws = new WebSocket(`ws://${location.host}/ws/logs`);
+  ws.onmessage = (e) => {
+    const log = JSON.parse(e.data);
+    const terminal = document.getElementById('logTerminal');
+    const line = document.createElement('div');
+    line.className = 'log-line';
+    line.innerHTML = `[${new Date(log.timestamp).toLocaleTimeString()}] ${log.message}`;
+    terminal.appendChild(line);
+    terminal.scrollTop = terminal.scrollHeight;
+    
+    const count = terminal.children.length;
+    document.getElementById('logBadge').textContent = count;
+    document.getElementById('logLineCount').textContent = count + ' lines';
+    
+    if (count > 500) {
+      while (terminal.children.length > 400) {
+        terminal.removeChild(terminal.firstChild);
+      }
+    }
+  };
+  ws.onclose = () => setTimeout(connectWS, 3000);
+}
+
+// Load config on startup
+async function loadConfig() {
+  try {
+    const res = await fetch(`${API}/api/config`);
+    const config = await res.json();
+    if (config.poll_interval) document.getElementById('pollInterval').value = config.poll_interval;
+    if (config.score_threshold) document.getElementById('scoreThreshold').value = config.score_threshold;
+  } catch(e) {}
+}
+
+// Initialize
+(async () => {
+  await loadConfig();
+  await fetchData();
+  connectWS();
+  setInterval(fetchData, 30000);
+  applyTheme();
+})();
+</script>
+</body>
+</html>

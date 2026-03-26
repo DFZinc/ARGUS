@@ -1,0 +1,27 @@
+# API Keys
+LUNARCRUSH_BEARER=your_lunarcrush_key_here
+X_BEARER_TOKEN=your_x_bearer_token_here
+APIFY_TOKEN=your_apify_token_here
+ETHERSCAN_API_KEY=your_etherscan_api_key_here
+
+# Polling & Agent Settings
+POLL_INTERVAL_SECONDS=300
+
+# Rate Limits & Concurrency
+DEXSCREENER_CONCURRENCY=5
+GECKO_CONCURRENCY=1
+GECKO_DELAY_SECS=5.0
+
+# Token Filters
+MIN_VOLUME_USD_1H=5000
+MIN_LIQUIDITY_USD=5000
+MIN_TXNS_1H=10
+
+# LLM Settings
+LLM_BASE_URL=http://localhost:11434
+LLM_MODEL=deepseek-r1:8b
+LLM_TEMPERATURE=0.6
+
+# Dashboard Settings
+DASHBOARD_HOST=0.0.0.0
+DASHBOARD_PORT=8002
